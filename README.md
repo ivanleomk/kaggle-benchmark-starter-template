@@ -163,6 +163,21 @@ harbor run \
   --allow-agent-host generativelanguage.googleapis.com
 ```
 
+You can also run the same task with your own custom agent. This repo includes a
+minimal Antigravity SDK example:
+
+- `agents/antigravity_agent.py`: Harbor agent adapter imported by `harbor run`.
+- `agents/antigravity_runner.py`: uv script uploaded into the task container to
+  run the Antigravity SDK.
+
+```bash
+harbor run \
+  -p tasks/hello-world \
+  --agent-import-path agents.antigravity_agent:AntigravityAgent \
+  -m google/gemini-3.5-flash \
+  --ae GEMINI_API_KEY="${GEMINI_API_KEY}"
+```
+
 Use this loop to validate the task definition, Docker environment, verifier,
 artifacts, agent loop, and model access.
 
