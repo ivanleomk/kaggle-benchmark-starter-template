@@ -63,8 +63,8 @@ After generating `.env`, you can call the model proxy through either an
 OpenAI-compatible endpoint or an Anthropic-compatible endpoint:
 
 ```bash
-${MODEL_PROXY_URL}/openapi
-${MODEL_PROXY_URL}/anthropic
+${MODEL_PROXY_URL%/}/openapi
+${MODEL_PROXY_URL%/}/anthropic
 ```
 
 The currently recommended test models are:
@@ -81,7 +81,7 @@ Smoke test the OpenAI-compatible endpoint:
 ```bash
 source .env
 
-curl "${MODEL_PROXY_URL}/openapi/chat/completions" \
+curl "${MODEL_PROXY_URL%/}/openapi/chat/completions" \
   -H "Authorization: Bearer ${MODEL_PROXY_API_KEY}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -101,7 +101,7 @@ Smoke test the Anthropic-compatible endpoint:
 ```bash
 source .env
 
-curl "${MODEL_PROXY_URL}/anthropic/messages" \
+curl "${MODEL_PROXY_URL%/}/anthropic/messages" \
   -H "x-api-key: ${MODEL_PROXY_API_KEY}" \
   -H "anthropic-version: 2023-06-01" \
   -H "Content-Type: application/json" \
@@ -117,11 +117,39 @@ curl "${MODEL_PROXY_URL}/anthropic/messages" \
   }'
 ```
 
-## Test with the Harbor runner image
+## Run the benchmark locally
 
-After pushing this repo, you can test it the same way the hosted runner does:
-start the Harbor runner image, let it clone the public repo, and point it at a
+While authoring a benchmark, run Harbor directly on your own machine. This uses
+your normal local Docker daemon, so there is no Docker-in-Docker setup involved.
+
+```bash
+source .env
+MODEL_PROXY_HOST="$(python3 -c 'from urllib.parse import urlparse; import os; print(urlparse(os.environ["MODEL_PROXY_URL"]).hostname)')"
+
+harbor run \
+  -p tasks/hello-world \
+  -a mini-swe-agent \
+  -m openai/google/gemini-3.5-flash \
+  --ae OPENAI_API_KEY="${MODEL_PROXY_API_KEY}" \
+  --ae OPENAI_BASE_URL="${MODEL_PROXY_URL%/}/openapi" \
+  --ae OPENAI_API_BASE="${MODEL_PROXY_URL%/}/openapi" \
+  --allow-agent-host "${MODEL_PROXY_HOST}"
+```
+
+Use this loop to validate the task definition, Docker environment, verifier,
+artifacts, agent loop, and model proxy credentials.
+
+## Test the runner payload end to end
+
+After the benchmark works locally and has been pushed, you can smoke test the
+packaged runner flow. This is closer to how hosted evaluation runs: the runner
+image clones the repo, checks out a ref, and runs Harbor against the requested
 task path.
+
+On macOS, the runner image uses Docker-in-Docker, so set
+`DOCKERD_STORAGE_DRIVER=vfs` to avoid nested overlay filesystem failures in
+Docker Desktop. The Kaggle team is working on a native arm64 runner image; use
+that for Mac smoke tests once it is published.
 
 ```bash
 source .env
@@ -129,13 +157,15 @@ source .env
 docker pull us-west1-docker.pkg.dev/kaggle-playground-170215/kaggle-benchmarks/harbor-test
 
 docker run --rm --privileged \
+  -e DOCKERD_STORAGE_DRIVER=vfs \
   -e KAGGLE_TASK_REPO_URL=https://github.com/ivanleomk/kaggle-benchmark-starter-template.git \
-  -e KAGGLE_TASK_REPO_REF=7be8bee \
+  -e KAGGLE_TASK_REPO_REF=77207bb \
   -e KAGGLE_TASK_PATH=tasks/hello-world \
   -e KAGGLE_HARBOR_AGENT=mini-swe-agent \
-  -e KAGGLE_HARBOR_MODEL=google/gemini-3.5-flash \
-  -e KAGGLE_ANTHROPIC_AUTH_TOKEN="${MODEL_PROXY_API_KEY}" \
-  -e KAGGLE_ANTHROPIC_BASE_URL="${MODEL_PROXY_URL}/anthropic" \
+  -e KAGGLE_HARBOR_MODEL=openai/google/gemini-3.5-flash \
+  -e OPENAI_API_KEY="${MODEL_PROXY_API_KEY}" \
+  -e OPENAI_BASE_URL="${MODEL_PROXY_URL%/}/openapi" \
+  -e OPENAI_API_BASE="${MODEL_PROXY_URL%/}/openapi" \
   us-west1-docker.pkg.dev/kaggle-playground-170215/kaggle-benchmarks/harbor-test
 ```
 
@@ -148,13 +178,28 @@ one with `gh auth token`:
 
 ```bash
 docker run --rm --privileged \
+  -e DOCKERD_STORAGE_DRIVER=vfs \
   -e KAGGLE_GIT_TOKEN="$(gh auth token)" \
   -e KAGGLE_TASK_REPO_URL=https://github.com/ivanleomk/kaggle-benchmark-starter-template.git \
-  -e KAGGLE_TASK_REPO_REF=7be8bee \
+  -e KAGGLE_TASK_REPO_REF=77207bb \
   -e KAGGLE_TASK_PATH=tasks/hello-world \
   -e KAGGLE_HARBOR_AGENT=mini-swe-agent \
-  -e KAGGLE_HARBOR_MODEL=google/gemini-3.5-flash \
-  -e KAGGLE_ANTHROPIC_AUTH_TOKEN="${MODEL_PROXY_API_KEY}" \
-  -e KAGGLE_ANTHROPIC_BASE_URL="${MODEL_PROXY_URL}/anthropic" \
+  -e KAGGLE_HARBOR_MODEL=openai/google/gemini-3.5-flash \
+  -e OPENAI_API_KEY="${MODEL_PROXY_API_KEY}" \
+  -e OPENAI_BASE_URL="${MODEL_PROXY_URL%/}/openapi" \
+  -e OPENAI_API_BASE="${MODEL_PROXY_URL%/}/openapi" \
   us-west1-docker.pkg.dev/kaggle-playground-170215/kaggle-benchmarks/harbor-test
+```
+
+## Build a runner image
+
+This repo also includes a minimal Harbor runner image in `runner/`. To publish
+both amd64 and arm64 variants under one tag:
+
+```bash
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t us-west1-docker.pkg.dev/kaggle-playground-170215/kaggle-benchmarks/harbor-test:latest \
+  --push \
+  runner
 ```

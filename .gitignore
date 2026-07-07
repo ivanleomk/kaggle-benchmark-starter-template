@@ -1,2 +1,5 @@
 .env
+jobs/
 .harbor-image-test/
+.harbor-simple-test/
+.harbor-simple-test-nop/
