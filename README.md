@@ -32,6 +32,19 @@ collection.
 For a reusable agent instruction pack, see
 `.agents/skills/kaggle-harbor-benchmark/SKILL.md`.
 
+Install it into your agent workspace with the Vercel
+[skills CLI](https://github.com/vercel-labs/skills):
+
+```bash
+npx skills add https://github.com/ivanleomk/kaggle-benchmark-starter-template/tree/main/.agents/skills/kaggle-harbor-benchmark
+```
+
+The skill follows the Vercel `SKILL.md` format and keeps the guidance short:
+YAML frontmatter for discovery, directive-style instructions, and concrete
+validation checks. The shape follows Phil Schmid's notes on
+[testing skills](https://www.philschmid.de/testing-skills) and
+[writing lean skills](https://www.philschmid.de/agent-skills-tips).
+
 ## Configure Model Proxy
 
 Create a Kaggle organization for the benchmark publisher account by following
