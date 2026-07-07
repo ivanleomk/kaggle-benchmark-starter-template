@@ -117,12 +117,6 @@ curl "${MODEL_PROXY_URL}/anthropic/messages" \
   }'
 ```
 
-## Local validation
-
-```bash
-harbor run -p . -a nop -m none
-```
-
 ## Test with the Harbor runner image
 
 After pushing this repo, you can test it the same way the hosted runner does:
@@ -136,7 +130,7 @@ docker pull us-west1-docker.pkg.dev/kaggle-playground-170215/kaggle-benchmarks/h
 
 docker run --rm --privileged \
   -e KAGGLE_TASK_REPO_URL=https://github.com/ivanleomk/kaggle-benchmark-starter-template.git \
-  -e KAGGLE_TASK_REPO_REF=<commit-sha-or-branch> \
+  -e KAGGLE_TASK_REPO_REF=7be8bee \
   -e KAGGLE_TASK_PATH=tasks/hello-world \
   -e KAGGLE_HARBOR_AGENT=mini-swe-agent \
   -e KAGGLE_HARBOR_MODEL=google/gemini-3.5-flash \
@@ -146,5 +140,21 @@ docker run --rm --privileged \
 ```
 
 Use a commit SHA for `KAGGLE_TASK_REPO_REF` when you want the run to be fully
-reproducible. If the task repo is private, also pass `KAGGLE_GIT_TOKEN` with a
-token that can clone it.
+reproducible.
+
+If the task repo is private, also pass `KAGGLE_GIT_TOKEN` with a token that can
+clone it. If you are already authenticated with the GitHub CLI, you can generate
+one with `gh auth token`:
+
+```bash
+docker run --rm --privileged \
+  -e KAGGLE_GIT_TOKEN="$(gh auth token)" \
+  -e KAGGLE_TASK_REPO_URL=https://github.com/ivanleomk/kaggle-benchmark-starter-template.git \
+  -e KAGGLE_TASK_REPO_REF=7be8bee \
+  -e KAGGLE_TASK_PATH=tasks/hello-world \
+  -e KAGGLE_HARBOR_AGENT=mini-swe-agent \
+  -e KAGGLE_HARBOR_MODEL=google/gemini-3.5-flash \
+  -e KAGGLE_ANTHROPIC_AUTH_TOKEN="${MODEL_PROXY_API_KEY}" \
+  -e KAGGLE_ANTHROPIC_BASE_URL="${MODEL_PROXY_URL}/anthropic" \
+  us-west1-docker.pkg.dev/kaggle-playground-170215/kaggle-benchmarks/harbor-test
+```
