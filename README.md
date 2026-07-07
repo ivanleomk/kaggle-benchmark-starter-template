@@ -159,7 +159,7 @@ docker pull us-west1-docker.pkg.dev/kaggle-playground-170215/kaggle-benchmarks/h
 docker run --rm --privileged \
   -e DOCKERD_STORAGE_DRIVER=vfs \
   -e KAGGLE_TASK_REPO_URL=https://github.com/ivanleomk/kaggle-benchmark-starter-template.git \
-  -e KAGGLE_TASK_REPO_REF=77207bb \
+  -e KAGGLE_TASK_REPO_REF=2c661dc \
   -e KAGGLE_TASK_PATH=tasks/hello-world \
   -e KAGGLE_HARBOR_AGENT=mini-swe-agent \
   -e KAGGLE_HARBOR_MODEL=openai/google/gemini-3.5-flash \
@@ -181,7 +181,7 @@ docker run --rm --privileged \
   -e DOCKERD_STORAGE_DRIVER=vfs \
   -e KAGGLE_GIT_TOKEN="$(gh auth token)" \
   -e KAGGLE_TASK_REPO_URL=https://github.com/ivanleomk/kaggle-benchmark-starter-template.git \
-  -e KAGGLE_TASK_REPO_REF=77207bb \
+  -e KAGGLE_TASK_REPO_REF=2c661dc \
   -e KAGGLE_TASK_PATH=tasks/hello-world \
   -e KAGGLE_HARBOR_AGENT=mini-swe-agent \
   -e KAGGLE_HARBOR_MODEL=openai/google/gemini-3.5-flash \
