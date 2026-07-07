@@ -153,10 +153,12 @@ that for Mac smoke tests once it is published.
 
 ```bash
 source .env
+mkdir -p .harbor-runner-test
 
 docker pull us-west1-docker.pkg.dev/kaggle-playground-170215/kaggle-benchmarks/harbor-test
 
 docker run --rm --privileged \
+  -v "$PWD/.harbor-runner-test:/kaggle/working" \
   -e DOCKERD_STORAGE_DRIVER=vfs \
   -e KAGGLE_TASK_REPO_URL=https://github.com/ivanleomk/kaggle-benchmark-starter-template.git \
   -e KAGGLE_TASK_REPO_REF=2c661dc \
@@ -169,6 +171,14 @@ docker run --rm --privileged \
   us-west1-docker.pkg.dev/kaggle-playground-170215/kaggle-benchmarks/harbor-test
 ```
 
+The mounted directory is where the runner writes outputs. Inside the container,
+Harbor writes to `/kaggle/working/jobs`; on your machine, those files appear
+under `.harbor-runner-test/jobs`:
+
+```bash
+find .harbor-runner-test/jobs -name result.json -print
+```
+
 Use a commit SHA for `KAGGLE_TASK_REPO_REF` when you want the run to be fully
 reproducible.
 
@@ -177,7 +187,11 @@ clone it. If you are already authenticated with the GitHub CLI, you can generate
 one with `gh auth token`:
 
 ```bash
+source .env
+mkdir -p .harbor-runner-test
+
 docker run --rm --privileged \
+  -v "$PWD/.harbor-runner-test:/kaggle/working" \
   -e DOCKERD_STORAGE_DRIVER=vfs \
   -e KAGGLE_GIT_TOKEN="$(gh auth token)" \
   -e KAGGLE_TASK_REPO_URL=https://github.com/ivanleomk/kaggle-benchmark-starter-template.git \
