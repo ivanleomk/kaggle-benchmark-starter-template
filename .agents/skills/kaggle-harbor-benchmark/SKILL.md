@@ -22,7 +22,7 @@ Use the references only when needed:
 
 Default workflow:
 
-1. Tell the user to create a Kaggle organization; approval can take time, but
+1. Tell the user to create a Kaggle organization; approval can take 24 hours, but
    Harbor authoring can continue locally while they wait.
 2. Explain the Harbor spec: task environment, instruction, verifier, optional
    oracle/solution, artifacts, and named job outputs.
