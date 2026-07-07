@@ -10,6 +10,28 @@ This starter includes one example task, `ivanleomk/hello-world`, which asks an
 agent to create `/app/hello.txt` with the content
 `Hello, world!`.
 
+## Reference Implementations
+
+This repo includes three working agent integration patterns for the same
+`tasks/hello-world` benchmark. The custom examples are based on Harbor's agent
+interfaces, but the pattern is general: implement the agent adapter, run the
+task with Harbor, and commit the resulting job output as a concrete reference.
+
+| Pattern | Implementation | Successful run |
+| --- | --- | --- |
+| Built-in Harbor agent | `harbor run -a mini-swe-agent` | `jobs/mini-swe-agent` |
+| Binary CLI agent | `agents/opencode_binary_agent.py` | `jobs/opencode-binary` |
+| SDK-backed custom agent | `agents/antigravity_agent.py` and `agents/antigravity_runner.py` | `jobs/antigravity` |
+
+The binary agent shows how to install a real command-line coding agent, execute
+it inside the benchmark container, and convert its logs into an ATIF trajectory.
+The Antigravity example shows how to upload and run a uv script that owns the
+SDK-specific implementation while Harbor handles setup, execution, and result
+collection.
+
+For a reusable agent instruction pack, see
+`.agents/skills/kaggle-harbor-benchmark/SKILL.md`.
+
 ## Configure Model Proxy
 
 Create a Kaggle organization for the benchmark publisher account by following
@@ -192,7 +214,9 @@ Use this loop to validate the task definition, Docker environment, verifier,
 artifacts, agent loop, and model access.
 
 Example successful Harbor outputs are committed under `jobs/mini-swe-agent`,
-`jobs/opencode-binary`, and `jobs/antigravity`.
+`jobs/opencode-binary`, and `jobs/antigravity`. Each directory contains the
+aggregate `result.json`, the per-trial `result.json`, verifier output,
+artifacts, and the agent trajectory/logs for that implementation.
 
 After your Kaggle organization is approved and you have model proxy credentials,
 you can run the same task through the Kaggle model proxy:
