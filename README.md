@@ -132,10 +132,8 @@ curl "${MODEL_PROXY_URL%/}/anthropic/messages" \
 
 While authoring a benchmark, run Harbor directly on your own machine. This uses
 your normal local Docker daemon, so there is no Docker-in-Docker setup involved.
-You can use a Gemini API key directly through Gemini's OpenAI-compatible
-endpoint:
-
-<https://ai.google.dev/gemini-api/docs/openai>
+You can use a Gemini API key directly through Gemini's
+[OpenAI-compatible endpoint](https://ai.google.dev/gemini-api/docs/openai).
 
 ```bash
 export GEMINI_API_KEY=<your-gemini-api-key>
