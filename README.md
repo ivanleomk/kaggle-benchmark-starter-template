@@ -10,22 +10,7 @@ This starter includes one example task, `ivanleomk/hello-world`, which asks an
 agent to create `/app/hello.txt` with the content
 `Hello, world!`.
 
-## Contents
-
-Follow these steps when creating a benchmark from this template:
-
-1. Create a Kaggle organization and wait for approval.
-2. Install and authenticate the Kaggle CLI.
-3. Create model proxy credentials.
-4. Run your first task locally with Harbor.
-5. Test the model proxy.
-6. Push the repo and smoke test the packaged runner payload.
-7. Publish multi-architecture runner images, if you maintain your own runner.
-
-You can complete the local Harbor flow with a direct Gemini API key while
-waiting for Kaggle organization approval.
-
-## Kaggle Organization Approval
+## Configure Model Proxy
 
 Create a Kaggle organization for the benchmark publisher account by following
 the official Kaggle organization docs:
@@ -37,13 +22,6 @@ publish. Organization approval usually takes around 24 hours and is required to
 get access to inference credits for the Kaggle model proxy. You can still
 install the CLI and validate this repo locally with a direct Gemini API key
 while waiting.
-
-## Repository Layout
-
-- `dataset.toml`: Harbor dataset manifest.
-- `tasks/hello-world/`: Harbor task definition, environment, solution, and tests.
-
-## Install the Kaggle CLI
 
 The official Kaggle CLI is distributed as the `kaggle` Python package. Install
 it as a standalone command with `uv`:
@@ -66,8 +44,6 @@ kaggle auth login
 
 This opens a browser-based login flow and stores credentials for future
 commands.
-
-## Create Model Proxy Credentials
 
 After your organization is approved, create a local `.env` file with
 credentials for the Kaggle model proxy. If approval is still pending, skip ahead
@@ -93,8 +69,6 @@ chmod 600 ~/.kaggle/kaggle.json
 
 If `kaggle` is not found after installation, run `uv tool update-shell` and
 open a new terminal.
-
-## Test the model proxy
 
 After generating `.env`, you can call the model proxy through either an
 OpenAI-compatible endpoint or an Anthropic-compatible endpoint:
@@ -154,7 +128,7 @@ curl "${MODEL_PROXY_URL%/}/anthropic/messages" \
   }'
 ```
 
-## Run Your First Task Locally
+## Test Your First Task
 
 While authoring a benchmark, run Harbor directly on your own machine. This uses
 your normal local Docker daemon, so there is no Docker-in-Docker setup involved.
@@ -213,7 +187,11 @@ harbor run \
   --allow-agent-host "${MODEL_PROXY_HOST}"
 ```
 
-## Test the runner payload end to end
+The starter task lives at `tasks/hello-world`. It asks an agent to create
+`/app/hello.txt` with the content `Hello, world!`. The dataset manifest is
+`dataset.toml`.
+
+## Verify With Our Image
 
 After the benchmark works locally and has been pushed, you can smoke test the
 packaged runner flow. This is closer to how hosted evaluation runs: the runner
@@ -235,7 +213,7 @@ docker run --rm --privileged \
   -v "$PWD/.harbor-runner-test:/kaggle/working" \
   -e DOCKERD_STORAGE_DRIVER=vfs \
   -e KAGGLE_TASK_REPO_URL=https://github.com/ivanleomk/kaggle-benchmark-starter-template.git \
-  -e KAGGLE_TASK_REPO_REF=2c661dc \
+  -e KAGGLE_TASK_REPO_REF=b408157 \
   -e KAGGLE_TASK_PATH=tasks/hello-world \
   -e KAGGLE_HARBOR_AGENT=mini-swe-agent \
   -e KAGGLE_HARBOR_MODEL=openai/google/gemini-3.5-flash \
@@ -269,7 +247,7 @@ docker run --rm --privileged \
   -e DOCKERD_STORAGE_DRIVER=vfs \
   -e KAGGLE_GIT_TOKEN="$(gh auth token)" \
   -e KAGGLE_TASK_REPO_URL=https://github.com/ivanleomk/kaggle-benchmark-starter-template.git \
-  -e KAGGLE_TASK_REPO_REF=2c661dc \
+  -e KAGGLE_TASK_REPO_REF=b408157 \
   -e KAGGLE_TASK_PATH=tasks/hello-world \
   -e KAGGLE_HARBOR_AGENT=mini-swe-agent \
   -e KAGGLE_HARBOR_MODEL=openai/google/gemini-3.5-flash \
@@ -278,8 +256,6 @@ docker run --rm --privileged \
   -e OPENAI_API_BASE="${MODEL_PROXY_URL%/}/openapi" \
   us-west1-docker.pkg.dev/kaggle-playground-170215/kaggle-benchmarks/harbor-test
 ```
-
-## Build a runner image
 
 This repo also includes a minimal Harbor runner image in `runner/`. To publish
 both amd64 and arm64 variants under one tag:
