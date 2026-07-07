@@ -16,14 +16,14 @@ Follow these steps when creating a benchmark from this template:
 
 1. Create a Kaggle organization and wait for approval.
 2. Install and authenticate the Kaggle CLI.
-3. Generate local model proxy credentials.
-4. Test the model proxy.
-5. Run the benchmark locally with Harbor.
+3. Create model proxy credentials.
+4. Run your first task locally with Harbor.
+5. Test the model proxy.
 6. Push the repo and smoke test the packaged runner payload.
 7. Publish multi-architecture runner images, if you maintain your own runner.
 
-You can complete the local Harbor and model proxy steps while waiting for Kaggle
-organization approval.
+You can complete the local Harbor flow with a direct Gemini API key while
+waiting for Kaggle organization approval.
 
 ## Kaggle Organization Approval
 
@@ -33,10 +33,10 @@ the official Kaggle organization docs:
 <https://www.kaggle.com/docs/organizations>
 
 Use the organization profile as the home for the datasets and benchmarks you
-publish. Make sure the organization is approved before publishing the final
-dataset and benchmark. Approval is only required for publishing; you can still
-install the CLI, generate model proxy credentials, and validate this repo
-locally while waiting.
+publish. Organization approval usually takes around 24 hours and is required to
+get access to inference credits for the Kaggle model proxy. You can still
+install the CLI and validate this repo locally with a direct Gemini API key
+while waiting.
 
 ## Repository Layout
 
@@ -67,7 +67,11 @@ kaggle auth login
 This opens a browser-based login flow and stores credentials for future
 commands.
 
-Next, create a local `.env` file with credentials for the Kaggle model proxy:
+## Create Model Proxy Credentials
+
+After your organization is approved, create a local `.env` file with
+credentials for the Kaggle model proxy. If approval is still pending, skip ahead
+to the local Harbor run with a direct Gemini API key.
 
 ```bash
 kaggle benchmarks auth -y --env-file .env
@@ -150,10 +154,33 @@ curl "${MODEL_PROXY_URL%/}/anthropic/messages" \
   }'
 ```
 
-## Run the benchmark locally
+## Run Your First Task Locally
 
 While authoring a benchmark, run Harbor directly on your own machine. This uses
 your normal local Docker daemon, so there is no Docker-in-Docker setup involved.
+You can use a Gemini API key directly through Gemini's OpenAI-compatible
+endpoint:
+
+<https://ai.google.dev/gemini-api/docs/openai>
+
+```bash
+export GEMINI_API_KEY=<your-gemini-api-key>
+
+harbor run \
+  -p tasks/hello-world \
+  -a mini-swe-agent \
+  -m openai/gemini-3.5-flash \
+  --ae OPENAI_API_KEY="${GEMINI_API_KEY}" \
+  --ae OPENAI_BASE_URL="https://generativelanguage.googleapis.com/v1beta/openai/" \
+  --ae OPENAI_API_BASE="https://generativelanguage.googleapis.com/v1beta/openai/" \
+  --allow-agent-host generativelanguage.googleapis.com
+```
+
+Use this loop to validate the task definition, Docker environment, verifier,
+artifacts, agent loop, and model access.
+
+After your Kaggle organization is approved and you have model proxy credentials,
+you can run the same task through the Kaggle model proxy:
 
 ```bash
 source .env
@@ -168,9 +195,6 @@ harbor run \
   --ae OPENAI_API_BASE="${MODEL_PROXY_URL%/}/openapi" \
   --allow-agent-host "${MODEL_PROXY_HOST}"
 ```
-
-Use this loop to validate the task definition, Docker environment, verifier,
-artifacts, agent loop, and model proxy credentials.
 
 ## Test the runner payload end to end
 
