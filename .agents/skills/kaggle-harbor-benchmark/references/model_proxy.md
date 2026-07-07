@@ -2,6 +2,10 @@
 
 ## Kaggle CLI Auth
 
+Create a Kaggle organization for the benchmark publisher account first.
+Approval can take around 24 hours and is needed for inference credits. While
+waiting, continue authoring and debugging the benchmark locally with Harbor.
+
 Install and authenticate the Kaggle CLI with uv:
 
 ```bash
@@ -95,5 +99,4 @@ OpenCode's built-in `openai` provider uses `/responses`. To force
 `/chat/completions`, register a custom OpenCode provider with
 `@ai-sdk/openai-compatible` and point it at `${MODEL_PROXY_URL%/}/openapi`.
 
-Use `scripts/repro_model_proxy_tool_result.py` when you need a small OpenAI
-client repro for the Responses API tool-result failure.
+For a debugging walkthrough and the local repro script, see `debug.md`.

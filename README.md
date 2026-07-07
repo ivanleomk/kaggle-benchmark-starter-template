@@ -1,7 +1,7 @@
 # Kaggle Benchmark Starter Template
 
 This repository shows how to publish a dataset and benchmark on Kaggle using a
-Harbor-compatible benchmark spec. The starter task,
+[Harbor](https://github.com/harbor-framework/harbor)-compatible spec. The starter task,
 `tasks/hello-world`, asks an agent to create `/app/hello.txt` containing exactly
 `Hello, world!`.
 
@@ -60,12 +60,14 @@ npx skills add https://github.com/ivanleomk/kaggle-benchmark-starter-template/tr
 
 The skill keeps `SKILL.md` brief and stores details in references:
 
+- `references/harbor_spec.md`: what Kaggle runs, the Harbor task pieces, and
+  the local-first workflow.
 - `references/model_proxy.md`: Kaggle auth, proxy endpoints, model slugs, and
   `/chat/completions` vs `/responses`.
-- `references/agent_patterns.md`: mini-swe, binary CLI, SDK-backed custom
-  agents, ATIF, and OpenCode provider setup.
-- `references/validation.md`: local Harbor runs, runner image smoke tests,
-  Docker-in-Docker notes, and named job evidence.
+- `references/agent.md`: mini-swe, binary CLI, SDK-backed custom
+  agents, ATIF, and links to sample implementations in this repo.
+- `references/debug.md`: local Harbor runs, runner image smoke tests,
+  Docker-in-Docker notes, model proxy debugging, and named job evidence.
 
 This follows the Vercel skill format and Phil Schmid's guidance to keep skills
 lean, testable, and progressively disclosed:
