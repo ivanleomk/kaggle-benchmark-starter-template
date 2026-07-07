@@ -166,6 +166,23 @@ endpoint:
 ```bash
 export GEMINI_API_KEY=<your-gemini-api-key>
 
+curl "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GEMINI_API_KEY}" \
+  -d '{
+    "model": "gemini-3.5-flash",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply with exactly: ok"
+      }
+    ]
+  }'
+```
+
+Then run the example task with Harbor:
+
+```bash
 harbor run \
   -p tasks/hello-world \
   -a mini-swe-agent \
