@@ -103,18 +103,13 @@ docker run --rm -it \
   --privileged \
   -v "$PWD/kaggle/working:/kaggle/working" \
   -v "harbor-dind-data:/var/lib/docker" \
-  -e KAGGLE_TASK_REPO_URL="https://github.com/<your-org>/<your-repo>" \
-  -e KAGGLE_TASK_PATH="tasks/example-task" \
+  -e KAGGLE_TASK_REPO_URL="https://github.com/ivanleomk/kaggle-benchmark-starter-template" \
+  -e KAGGLE_TASK_PATH="tasks/hello-world" \
   -e KAGGLE_HARBOR_AGENT="mini-swe-agent" \
   -e LLM_DEFAULT="openai/google/gemini-3.5-flash" \
   -e KAGGLE_HARBOR_MODEL="openai/google/gemini-3.5-flash" \
   -e MODEL_PROXY_BASE_URL="${MODEL_PROXY_URL%/}/openapi/v1" \
   -e MODEL_PROXY_API_KEY="${MODEL_PROXY_API_KEY}" \
-  -e OPENAI_BASE_URL="${MODEL_PROXY_URL%/}/openapi/v1" \
-  -e OPENAI_API_KEY="${MODEL_PROXY_API_KEY}" \
-  -e KAGGLE_USERNAME="${KAGGLE_USERNAME:-}" \
-  -e KAGGLE_KEY="${KAGGLE_KEY:-}" \
-  -e KAGGLE_API_TOKEN="${KAGGLE_API_TOKEN:-${KAGGLE_KEY:-}}" \
   us-west1-docker.pkg.dev/kaggle-playground-170215/kaggle-benchmarks/harbor-git-v1:latest
 ```
 
