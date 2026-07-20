@@ -33,10 +33,33 @@ kaggle benchmarks auth -y --env-file .env
 Run the starter task locally:
 
 ```bash
+source .env
+OPENAI_API_KEY="${MODEL_PROXY_API_KEY}" \
+OPENAI_BASE_URL="${MODEL_PROXY_URL%/}/openapi/v1" \
 harbor run \
   -p tasks/hello-world \
   -a mini-swe-agent \
-  -m openai/gemini-3.5-flash
+  -m openai/google/gemini-3.5-flash
+```
+
+Run the starter task on the Kaggle Harbor executor Docker image locally:
+
+```bash
+source .env
+docker run --privileged --rm \
+  -v "$PWD/kaggle/working:/kaggle/working" \
+  -v "harbor-dind-data:/var/lib/docker" \
+  -e MODEL_PROXY_URL="${MODEL_PROXY_URL}" \
+  -e MODEL_PROXY_BASE_URL="${MODEL_PROXY_URL%/}/openapi/v1" \
+  -e MODEL_PROXY_API_KEY="${MODEL_PROXY_API_KEY}" \
+  -e OPENAI_BASE_URL="${MODEL_PROXY_URL%/}/openapi/v1" \
+  -e OPENAI_API_KEY="${MODEL_PROXY_API_KEY}" \
+  -e KAGGLE_TASK_REPO_URL="https://github.com/ivanleomk/kaggle-benchmark-starter-template" \
+  -e KAGGLE_TASK_PATH="tasks/hello-world" \
+  -e KAGGLE_HARBOR_AGENT="mini-swe-agent" \
+  -e LLM_DEFAULT="openai/google/gemini-3.5-flash" \
+  -e KAGGLE_HARBOR_MODEL="openai/google/gemini-3.5-flash" \
+  us-west1-docker.pkg.dev/kaggle-playground-170215/kaggle-benchmarks/harbor-git-v1:latest
 ```
 
 Run the OpenCode binary-agent example:
@@ -44,7 +67,7 @@ Run the OpenCode binary-agent example:
 ```bash
 harbor run \
   -p tasks/hello-world \
-  --agent-import-path agents.opencode_binary_agent:OpenCodeBinaryAgent \
+  -a agents.opencode_binary_agent:OpenCodeBinaryAgent \
   -m google/gemini-3.5-flash \
   --ae GEMINI_API_KEY="${GEMINI_API_KEY}"
 ```
