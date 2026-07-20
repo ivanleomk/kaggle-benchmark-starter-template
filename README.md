@@ -1,92 +1,126 @@
-# Kaggle Benchmark Starter Template
+# ileo/sample-dataset
 
-This repository shows how to publish a dataset and benchmark on Kaggle using a
-[Harbor](https://github.com/harbor-framework/harbor)-compatible spec. The starter task,
-`tasks/hello-world`, asks an agent to create `/app/hello.txt` containing exactly
-`Hello, world!`.
+This is a starter repository for building Agentic Benchmarks using the [Harbor Benchmark Framework](https://github.com/kaggle/harbor) to be ran on Kaggle.
 
-Use this repo to see the full loop: define a task, run it locally with Harbor,
-connect it to the Kaggle model proxy, and commit named job outputs as evidence.
+## Initialising your Harbor Dataset
 
-## Reference Implementations
-
-| Pattern | Implementation | Successful run |
-| --- | --- | --- |
-| Built-in Harbor agent | `harbor run -a mini-swe-agent` | `jobs/mini-swe-agent` |
-| Binary CLI agent | `agents/opencode_binary_agent.py` | `jobs/opencode-binary` |
-| SDK-backed custom agent | `agents/antigravity_agent.py` and `agents/antigravity_runner.py` | `jobs/antigravity` |
-
-The custom examples borrow Harbor's agent interfaces, but the pattern is
-general: implement an adapter, run the task with Harbor, and commit the
-resulting job output as a concrete reference.
-
-## Quick Start
-
-Install the Kaggle CLI with uv and create model proxy credentials:
+You can initialise the repository using the following command
 
 ```bash
-uv tool install kaggle
+uv venv .venv
+source .venv/bin/activate
+uv pip install harbor
+echo ".venv/" > .gitignore
+harbor init --dataset ileo/sample-dataset
+harbor init --task ileo/example-task -o tasks
+```
+
+## Generating your Kaggle Credentials
+
+Before running your first task locally.
+
+Install the Kaggle CLI and mint authentication credentials using the commands below:
+
+```bash
+pip install kaggle
 kaggle auth login
 kaggle benchmarks auth -y --env-file .env
 ```
 
-Run the starter task locally:
+This will in turn mint a .env file with the credentials needed to connect to the model proxy server.
+
+```toml
+MODEL_PROXY_URL=
+MODEL_PROXY_API_KEY=
+MODEL_PROXY_EXPIRY_TIME=2026-07-20T22:18:38.291000Z
+```
+
+Once you've minted your first set of credentials, you should then verify that they work by testing it as seen below.
+
+```bash
+source .env
+curl "${MODEL_PROXY_URL%/}/openapi/v1/chat/completions" \
+  -H "Authorization: Bearer ${MODEL_PROXY_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"google/gemini-3.5-flash","messages":[{"role":"user","content":"Reply with exactly: ok"}]}'
+```
+
+If you'd like to test it with an Anthropic compatible endpoint, you can use the following
+
+```bash
+source .env
+curl "${MODEL_PROXY_URL%/}/anthropic/v1/messages" \
+  -H "x-api-key: ${MODEL_PROXY_API_KEY}" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"google/gemini-3.5-flash","messages":[{"role":"user","content":"Reply with exactly: ok"}],"max_tokens":100}'
+```
+
+We also support the responses API as seen below if you're using the new OpenAI models.
+
+```bash
+source .env
+curl "${MODEL_PROXY_URL%/}/openapi/v1/responses" \
+  -H "Authorization: Bearer ${MODEL_PROXY_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"google/gemini-3.5-flash","input":"Reply with exactly: ok"}'
+```
+
+## Your First Run
+
+After initialising your dataset and generating your Kaggle credentials, perform your first local run to verify that your Docker environment and task verifier work end-to-end.
+
+To test the baseline environment, you can run the NOP agent. This builds the Docker image and runs the test suite without modifications (expecting Reward: 0.0).
+
+```bash
+harbor run --path tasks/example-task --agent nop
+```
+
+To test the task reference solution, you can run the Oracle agent. The `oracle` agent executes `solution/solve.sh` inside the container to solve the task and verify that your test suite passes (expecting Reward: 1.0).
+
+```bash
+harbor run --path tasks/example-task --agent oracle
+```
+
+To run an LLM agent (e.g. `mini-swe-agent`) locally using your Kaggle Model Proxy credentials:
 
 ```bash
 source .env
 OPENAI_API_KEY="${MODEL_PROXY_API_KEY}" \
 OPENAI_BASE_URL="${MODEL_PROXY_URL%/}/openapi/v1" \
-harbor run \
-  -p tasks/hello-world \
-  -a mini-swe-agent \
-  -m openai/google/gemini-3.5-flash
+harbor run --path tasks/example-task --agent mini-swe-agent --model openai/google/gemini-3.5-flash
 ```
 
-Run the starter task on the Kaggle Harbor executor Docker image locally:
+After the run finishes, you can inspect the run results in `jobs/`. You can view a summary using `harbor view jobs`, or check detailed logs in `jobs/<timestamp>/<task-name>/trial.log` and `jobs/<timestamp>/<task-name>/verifier/ctrf.json`.
+
+## Testing against Kaggle
+
+You can verify and run a task using `mini-swe-agent` on the Kaggle Harbor executor Docker image locally:
 
 ```bash
 source .env
-docker run --privileged --rm \
+docker run --rm -it \
+  --privileged \
   -v "$PWD/kaggle/working:/kaggle/working" \
   -v "harbor-dind-data:/var/lib/docker" \
-  -e MODEL_PROXY_URL="${MODEL_PROXY_URL}" \
+  -e KAGGLE_TASK_REPO_URL="https://github.com/<your-org>/<your-repo>" \
+  -e KAGGLE_TASK_PATH="tasks/example-task" \
+  -e KAGGLE_HARBOR_AGENT="mini-swe-agent" \
+  -e LLM_DEFAULT="openai/google/gemini-3.5-flash" \
+  -e KAGGLE_HARBOR_MODEL="openai/google/gemini-3.5-flash" \
   -e MODEL_PROXY_BASE_URL="${MODEL_PROXY_URL%/}/openapi/v1" \
   -e MODEL_PROXY_API_KEY="${MODEL_PROXY_API_KEY}" \
   -e OPENAI_BASE_URL="${MODEL_PROXY_URL%/}/openapi/v1" \
   -e OPENAI_API_KEY="${MODEL_PROXY_API_KEY}" \
-  -e KAGGLE_TASK_REPO_URL="https://github.com/ivanleomk/kaggle-benchmark-starter-template" \
-  -e KAGGLE_TASK_PATH="tasks/hello-world" \
-  -e KAGGLE_HARBOR_AGENT="mini-swe-agent" \
-  -e LLM_DEFAULT="openai/google/gemini-3.5-flash" \
-  -e KAGGLE_HARBOR_MODEL="openai/google/gemini-3.5-flash" \
+  -e KAGGLE_USERNAME="${KAGGLE_USERNAME:-}" \
+  -e KAGGLE_KEY="${KAGGLE_KEY:-}" \
+  -e KAGGLE_API_TOKEN="${KAGGLE_API_TOKEN:-${KAGGLE_KEY:-}}" \
   us-west1-docker.pkg.dev/kaggle-playground-170215/kaggle-benchmarks/harbor-git-v1:latest
 ```
 
-Run the OpenCode binary-agent example:
+> **Note:**
+>
+> - The executor container automatically sets `ANTHROPIC_API_KEY` if it detects a Claude model, and sets `OPENAI_API_KEY` otherwise.
+> - Additional environment variables can be passed into the container using extra `-e VAR_NAME="value"` flags.
 
-```bash
-harbor run \
-  -p tasks/hello-world \
-  -a agents.opencode_binary_agent:OpenCodeBinaryAgent \
-  -m google/gemini-3.5-flash \
-  --ae GEMINI_API_KEY="${GEMINI_API_KEY}"
-```
-
-## Reusable Skill
-
-Install the agent skill with the Vercel [skills CLI](https://github.com/vercel-labs/skills) to get started building with Kaggle.
-
-```bash
-npx skills add https://github.com/ivanleomk/kaggle-benchmark-starter-template/tree/main/.agents/skills/kaggle-harbor-benchmark
-```
-
-The skill keeps `SKILL.md` brief and stores details in references:
-
-- `references/harbor_spec.md`: what Kaggle runs, the Harbor task pieces, and
-  the local-first workflow.
-- `references/model_proxy.md`: Kaggle auth, proxy endpoints, model slugs, and
-  `/chat/completions` vs `/responses`.
-- `references/agent.md`: mini-swe, binary CLI, SDK-backed custom
-  agents, ATIF, and links to sample implementations in this repo.
-- `references/debug.md`: local Harbor runs, runner image smoke tests,
-  Docker-in-Docker notes, model proxy debugging, and named job evidence.
+Alternatively, run `./run_mini_swe_agent.sh` to execute the task using the pre-configured script.

@@ -30,19 +30,19 @@ it expires.
 The proxy exposes two compatibility surfaces:
 
 ```text
-${MODEL_PROXY_URL%/}/openapi
+${MODEL_PROXY_URL%/}/openapi/v1
 ${MODEL_PROXY_URL%/}/anthropic
 ```
 
-Use `/openapi/chat/completions` for OpenAI-compatible chat and tool-calling
-flows. Use `/anthropic/messages` for Anthropic-compatible calls.
+Use `/openapi/v1/chat/completions` for OpenAI-compatible chat and tool-calling
+flows. Use `/anthropic/v1/messages` for Anthropic-compatible calls.
 
 ## OpenAI Chat Completions Smoke Test
 
 ```bash
 source .env
 
-curl "${MODEL_PROXY_URL%/}/openapi/chat/completions" \
+curl "${MODEL_PROXY_URL%/}/openapi/v1/chat/completions" \
   -H "Authorization: Bearer ${MODEL_PROXY_API_KEY}" \
   -H "Content-Type: application/json" \
   -d '{
